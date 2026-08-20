@@ -11,6 +11,8 @@ final List<Map<String, dynamic>> students = [
     'studentId': '2026-001',
     'email': 'leila@gmail.com',
     'favoriteSubject': 'PE',
+    'favorite': false,
+    'editing': false,
   },
   {
     'image': 'assets/Profile2.jpg',
@@ -22,6 +24,8 @@ final List<Map<String, dynamic>> students = [
     'studentId': '2026-002',
     'email': 'karol@gmail.com',
     'favoriteSubject': 'Theo',
+    'favorite': false,
+    'editing': false,
   },
   {
     'image': 'assets/Profile3.jpg',
@@ -33,6 +37,8 @@ final List<Map<String, dynamic>> students = [
     'studentId': '2026-003',
     'email': 'shairha@gmail.com',
     'favoriteSubject': 'GEC',
+    'favorite': false,
+    'editing': false,
   },
   {
     'image': 'assets/Profile4.jpg',
@@ -44,6 +50,8 @@ final List<Map<String, dynamic>> students = [
     'studentId': '2026-004',
     'email': 'cass@gmail.com',
     'favoriteSubject': 'Arts',
+    'favorite': false,
+    'editing': false,
   },
   {
     'image': 'assets/Profile5.jpg',
@@ -55,6 +63,8 @@ final List<Map<String, dynamic>> students = [
     'studentId': '2026-005',
     'email': 'james@gmail.com',
     'favoriteSubject': 'Programming',
+    'favorite': false,
+    'editing': false,
   },
   {
     'image': 'assets/Profile6.jpg',
@@ -66,12 +76,10 @@ final List<Map<String, dynamic>> students = [
     'studentId': '2026-006',
     'email': 'carl@gmail.com',
     'favoriteSubject': 'Programming',
+    'favorite': false,
+    'editing': false,
   },
 ];
-
-// =========================
-// SORT STUDENTS ALPHABETICALLY
-// =========================
 
 void sortStudents() {
   students.sort(
@@ -155,8 +163,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  bool isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
@@ -197,11 +212,6 @@ class MyHomePage extends StatelessWidget {
               )
             : ListView(
                 children: [
-
-                  // =========================
-                  // SORTED STUDENT LIST
-                  // =========================
-
                   ListView.builder(
                     shrinkWrap: true,
                     physics:
@@ -213,7 +223,6 @@ class MyHomePage extends StatelessWidget {
 
                       return Column(
                         children: [
-
                           Padding(
                             padding:
                                 const EdgeInsets.only(top: 20),
@@ -228,195 +237,336 @@ class MyHomePage extends StatelessWidget {
 
                           const SizedBox(height: 15),
 
-                          Card(
-                            color: const Color.fromARGB(
-                              53,
-                              103,
-                              102,
-                              102,
-                            ),
+                          GestureDetector(
+                            onTap: () {
+                              print(
+                                'Student Card tapped: ${student['name']}',
+                              );
+                            },
 
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.all(15),
+                            child: Card(
+                              // FLAG 4: card color changes when favorited
+                              color: student['favorite']
+                                  ? const Color.fromARGB(
+                                      120,
+                                      59,
+                                      115,
+                                      236,
+                                    )
+                                  : const Color.fromARGB(
+                                      53,
+                                      103,
+                                      102,
+                                      102,
+                                    ),
 
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(12),
+                                side: student['favorite']
+                                    ? const BorderSide(
+                                        color: Color.fromARGB(
+                                          255,
+                                          59,
+                                          115,
+                                          236,
+                                        ),
+                                        width: 2,
+                                      )
+                                    : BorderSide.none,
+                              ),
 
-                                children: [
+                              child: Padding(
+                                padding: const EdgeInsets.all(15),
 
-                                  Text(
-                                    student['name'],
-                                    style: const TextStyle(
-                                      fontSize: 26,
-                                      fontWeight:
-                                          FontWeight.bold,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+
+                                  children: [
+                                    // FLAG 4: "Favorite" label, only shown when marked
+                                    if (student['favorite']) ...[
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(
+                                            Icons.star,
+                                            color: Color.fromARGB(
+                                              255,
+                                              255,
+                                              215,
+                                              0,
+                                            ),
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            'FAVORITE',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight:
+                                                  FontWeight.bold,
+                                              letterSpacing: 1.2,
+                                              color: Color.fromARGB(
+                                                255,
+                                                255,
+                                                215,
+                                                0,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
+                                      const SizedBox(height: 8),
+                                    ],
+
+                                    Text(
+                                      student['name'],
+                                      style: const TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 15),
+
+                                    Text(
+                                      student['course'],
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 15),
+
+                                    Text(
+                                      'Age: ${student['age']}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontStyle: FontStyle.italic,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 15),
+
+                                    Text(
+                                      student['hobby'],
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 15),
+
+                                    Text(
+                                      'Student ID: ${student['studentId']}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    Text(
+                                      'Email: ${student['email']}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    Text(
+                                      'Favorite Subject: ${student['favoriteSubject']}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Color.fromARGB(
+                                          255,
+                                          249,
+                                          249,
+                                          250,
+                                        ),
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 6,
+                                            color: Colors.black54,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 15),
+
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+
+                                      children: [
+                                        // FAVORITE BUTTON
+                                        IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              student['favorite'] =
+                                                  !student['favorite'];
+                                            });
+                                          },
+
+                                          icon: Icon(
+                                            student['favorite']
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: student['favorite']
+                                                ? const Color.fromARGB(
+                                                    255,
+                                                    59,
+                                                    115,
+                                                    236,
+                                                  )
+                                                : Colors.white,
+                                            size: 40,
+                                          ),
+                                        ),
+
+                                        IconButton(
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                    'Edit Student',
+                                                  ),
+                                                  content: Text(
+                                                    'Edit screen for '
+                                                    '${student['name']} '
+                                                    'coming soon!',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.pop(
+                                                          context,
+                                                        );
+                                                      },
+                                                      child: const Text(
+                                                        'Close',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                            size: 40,
+                                          ),
+                                        ),
+
+                                        IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              students.remove(student);
+                                            });
+                                          },
+
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Color.fromARGB(
+                                              255,
+                                              255,
+                                              90,
+                                              90,
+                                            ),
+                                            size: 40,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                  ),
-
-                                  const SizedBox(height: 15),
-
-                                  Text(
-                                    student['course'],
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
-                                      ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 15),
-
-                                  Text(
-                                    'Age: ${student['age']}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontStyle:
-                                          FontStyle.italic,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
-                                      ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 15),
-
-                            
-                                  Text(
-                                    student['hobby'],
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
-                                      ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 15),
-
-                                  Text(
-                                    'Student ID: ${student['studentId']}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
-                                      ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 10),
-
-                                  Text(
-                                    'Email: ${student['email']}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
-                                      ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 10),
-
-                                  Text(
-                                    'Favorite Subject: ${student['favoriteSubject']}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(
-                                        255,
-                                        249,
-                                        249,
-                                        250,
-                                      ),
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 6,
-                                          color:
-                                              Colors.black54,
-                                          offset:
-                                              Offset(1, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -431,15 +581,25 @@ class MyHomePage extends StatelessWidget {
                   // FAVORITES ICON
                   // =========================
 
-                  const Icon(
-                    Icons.favorite,
-                    color: Color.fromARGB(
-                      255,
-                      253,
-                      253,
-                      253,
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isFavorite = !isFavorite;
+                      });
+                    },
+
+                    icon: Icon(
+                      Icons.favorite,
+                      color: isFavorite
+                          ? const Color.fromARGB(
+                              255,
+                              59,
+                              115,
+                              236,
+                            )
+                          : Colors.white,
+                      size: 200,
                     ),
-                    size: 200,
                   ),
 
                   // =========================
@@ -458,11 +618,9 @@ class MyHomePage extends StatelessWidget {
                       padding: const EdgeInsets.all(15),
 
                       child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
 
                         children: [
-
                           const SizedBox(height: 10),
 
                           const Text(
@@ -531,7 +689,6 @@ class MyHomePage extends StatelessWidget {
                                 MainAxisAlignment.spaceEvenly,
 
                             children: const [
-
                               Text(
                                 'Music: All Taylor Swift',
                                 style: TextStyle(
