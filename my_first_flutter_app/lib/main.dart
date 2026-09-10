@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'student_list_screen.dart';
+import 'student_details_screen.dart';
+import 'add_student_screen.dart';
+
 void main() {
+  sortStudents();
+
   runApp(const MyApp());
 }
 
@@ -11,106 +17,28 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My First Flutter Application',
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
-    );
-  }
-}
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key});
+      initialRoute: '/student-list',
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text(
-          'My First Flutter Application',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/flutterimage.jpg'), // background image
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Leila G. Bangoy',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 6,
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'BSIT - 3',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 6,
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'My First Flutter Application',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 6,
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'August 4, 2026',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 6,
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      routes: {
+        '/student-list': (context) => const StudentListScreen(),
+
+        '/student-details': (context) {
+          final student =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>;
+
+          return StudentDetailsScreen(student: student);
+        },
+
+        '/add-student': (context) => const AddStudentScreen(),
+      },
     );
   }
 }
