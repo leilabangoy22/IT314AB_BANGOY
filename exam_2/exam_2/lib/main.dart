@@ -1,20 +1,52 @@
 import 'package:flutter/material.dart';
 
+class Player {
+  String? name;
+  String? status;
+  bool isOnline;
+  bool isMobile;
+
+  Player({
+    this.name,
+    this.status,
+    this.isOnline = false,
+    this.isMobile = false,
+  });
+}
+
 class Players {
-  String? name = "MissYouLikeKrazy";
-  String? status = "Online - VALORANT";
-
-  String? name1 = "bread";
-  String? status1 = "Playing - VALORANT";
-
-  String? name2 = "The14th";
-  String? status2 = "Playing - VALORANT";
-
-  String? online = "Carlvendish";
-  String? status3 = "Away - Riot Mobile";
-
-  String? online2 = "D1yah";
-  String? status4 = "Away - Riot Mobile";
+  List<Player> players = [
+    Player(
+      name: "MissYouLikeKrazy",
+      status: "Online - VALORANT",
+      isOnline: true,
+      isMobile: false,
+    ),
+    Player(
+      name: "bread",
+      status: "Playing - VALORANT",
+      isOnline: true,
+      isMobile: false,
+    ),
+    Player(
+      name: "The14th",
+      status: "Playing - VALORANT",
+      isOnline: true,
+      isMobile: false,
+    ),
+    Player(
+      name: "Carlvendish",
+      status: "Away - Riot Mobile",
+      isOnline: false,
+      isMobile: true,
+    ),
+    Player(
+      name: "D1yah",
+      status: "Away - Riot Mobile",
+      isOnline: false,
+      isMobile: true,
+    ),
+  ];
 }
 
 void main() {
@@ -73,7 +105,6 @@ class MyHomePage extends StatelessWidget {
                 color: const Color(0xFF211D1F),
                 borderRadius: BorderRadius.circular(14),
               ),
-
               child: const Row(
                 children: [
                   SizedBox(width: 15),
@@ -113,208 +144,138 @@ class MyHomePage extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            Row(
-              children: [
-                const SizedBox(width: 25),
-                const CircleAvatar(
-                  radius: 27,
-                  backgroundColor: Color(0xFF211D1F),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromARGB(255, 248, 1, 1),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      player.name ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 249, 249, 250),
+            Expanded(
+              child: ListView.builder(
+                itemCount: player.players.length,
+                itemBuilder: (context, index) {
+                  Player currentPlayer = player.players[index];
+
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return ChatRoom(player: currentPlayer);
+                          },
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 15),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 25),
+
+                          const CircleAvatar(
+                            radius: 27,
+                            backgroundColor: Color(0xFF211D1F),
+                            child: Icon(
+                              Icons.person,
+                              color: Color.fromARGB(255, 248, 1, 1),
+                              size: 28,
+                            ),
+                          ),
+
+                          const SizedBox(width: 15),
+
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                currentPlayer.name ?? "Unknown User",
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 249, 249, 250),
+                                ),
+                              ),
+
+                              Row(
+                                children: [
+                                  Icon(
+                                    currentPlayer.isMobile
+                                        ? Icons.mobile_friendly
+                                        : Icons.monitor,
+                                    size: 20,
+                                  ),
+
+                                  const SizedBox(width: 5),
+
+                                  Text(
+                                    currentPlayer.status ??
+                                        "No status available.",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color.fromARGB(255, 249, 249, 250),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 5),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                    Icon(Icons.monitor),
+class ChatRoom extends StatefulWidget {
+  final Player player;
 
-                    Text(
-                      player.status ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+  const ChatRoom({super.key, required this.player});
+
+  @override
+  State<ChatRoom> createState() => _ChatRoomState();
+}
+
+class _ChatRoomState extends State<ChatRoom> {
+  final TextEditingController messageController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF090909),
+
+        title: Row(
+          children: [
+            const CircleAvatar(
+              radius: 20,
+              backgroundColor: Color(0xFF211D1F),
+              child: Icon(
+                Icons.person,
+                color: Color.fromARGB(255, 248, 1, 1),
+                size: 22,
+              ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(width: 10),
 
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(width: 25),
-                const CircleAvatar(
-                  radius: 27,
-                  backgroundColor: Color(0xFF211D1F),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromARGB(255, 248, 1, 1),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      player.name1 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-
-                    Text(
-                      player.status1 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 15),
-
-            Row(
-              children: [
-                const SizedBox(width: 25),
-                const CircleAvatar(
-                  radius: 27,
-                  backgroundColor: Color(0xFF211D1F),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromARGB(255, 248, 1, 1),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      player.name2 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-
-                    Text(
-                      player.status2 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                const SizedBox(width: 20),
-                const Text(
-                  'Online  4',
-                  style: TextStyle(
-                    color: Colors.white70,
+                Text(
+                  widget.player.name ?? "Unknown User",
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
 
-            const SizedBox(height: 15),
-
-            Row(
-              children: [
-                const SizedBox(width: 25),
-                const CircleAvatar(
-                  radius: 27,
-                  backgroundColor: Color(0xFF211D1F),
-                  child: Icon(Icons.person, color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      player.online ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      player.status3 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 15),
-
-            Row(
-              children: [
-                const SizedBox(width: 25),
-                const CircleAvatar(
-                  radius: 27,
-                  backgroundColor: Color(0xFF211D1F),
-                  child: Icon(Icons.person, color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      player.online2 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      player.status4 ?? "Unknown",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color.fromARGB(255, 249, 249, 250),
-                      ),
-                    ),
-                  ],
+                Text(
+                  widget.player.status ?? "No status available.",
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
               ],
             ),
@@ -322,5 +283,11 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    messageController.dispose();
+    super.dispose();
   }
 }
