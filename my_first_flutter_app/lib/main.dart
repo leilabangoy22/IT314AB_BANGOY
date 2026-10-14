@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'student_list_screen.dart';
 import 'student_details_screen.dart';
 import 'add_student_screen.dart';
 
-void main() {
-  sortStudents();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await loadStudents();
 
   runApp(const MyApp());
 }
@@ -16,19 +17,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'My First Flutter Application',
-
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
-
-        useMaterial3: true,
-      ),
-
+      debugShowCheckedModeBanner: false,
       initialRoute: '/student-list',
-
       routes: {
         '/student-list': (context) => const StudentListScreen(),
-
         '/student-details': (context) {
           final student =
               ModalRoute.of(context)!.settings.arguments
@@ -36,7 +28,6 @@ class MyApp extends StatelessWidget {
 
           return StudentDetailsScreen(student: student);
         },
-
         '/add-student': (context) => const AddStudentScreen(),
       },
     );

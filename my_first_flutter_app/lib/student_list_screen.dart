@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final List<Map<String, dynamic>> students = [
+List<Map<String, dynamic>> students = [
   {
     'image': 'assets/Profile.jpg',
     'name': 'Leila G. Bangoy',
@@ -82,14 +84,46 @@ final List<Map<String, dynamic>> students = [
 ];
 
 void sortStudents() {
-  students.sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
+  students.sort(
+    (a, b) => a['name'].toString().toLowerCase().compareTo(
+          b['name'].toString().toLowerCase(),
+        ),
+  );
+}
+
+Future<void> saveStudents() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  await prefs.setString(
+    'saved_students',
+    jsonEncode(students),
+  );
+}
+
+Future<void> loadStudents() async {
+  final prefs = await SharedPreferences.getInstance();
+  final savedData = prefs.getString('saved_students');
+
+  if (savedData != null) {
+    final List<dynamic> decodedData = jsonDecode(savedData);
+
+    students = decodedData.map((student) {
+      return Map<String, dynamic>.from(student);
+    }).toList();
+  } else {
+    sortStudents();
+    await saveStudents();
+  }
+
+  sortStudents();
 }
 
 class StudentListScreen extends StatefulWidget {
   const StudentListScreen({super.key});
 
   @override
-  State<StudentListScreen> createState() => _StudentListScreenState();
+  State<StudentListScreen> createState() =>
+      _StudentListScreenState();
 }
 
 class _StudentListScreenState extends State<StudentListScreen> {
@@ -98,12 +132,223 @@ class _StudentListScreenState extends State<StudentListScreen> {
   @override
   void initState() {
     super.initState();
+    loadStudentList();
+  }
 
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        isLoading = false;
-      });
+  Future<void> loadStudentList() async {
+    await loadStudents();
+
+    if (!mounted) return;
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+      sortStudents();
     });
+  }
+
+  Future<void> openAddStudent() async {
+    final result = await Navigator.pushNamed(
+      context,
+      '/add-student',
+    );
+
+    if (result == true && mounted) {
+      await loadStudents();
+
+      if (!mounted) return;
+
+      setState(() {
+        sortStudents();
+      });
+    }
+  }
+
+  Future<void> editStudent(
+    Map<String, dynamic> student,
+  ) async {
+    final nameController = TextEditingController(
+      text: student['name']?.toString() ?? '',
+    );
+
+    final courseController = TextEditingController(
+      text: student['course']?.toString() ?? '',
+    );
+
+    final hobbyController = TextEditingController(
+      text: student['hobby']?.toString() ?? '',
+    );
+
+    final idController = TextEditingController(
+      text: student['studentId']?.toString() ?? '',
+    );
+
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Edit Student'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter student name';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: idController,
+                    decoration: const InputDecoration(
+                      labelText: 'Student ID',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter student ID';
+                      }
+
+                      final duplicate = students.any((other) {
+                        return !identical(other, student) &&
+                            other['studentId']
+                                    .toString()
+                                    .toLowerCase() ==
+                                value.trim().toLowerCase();
+                      });
+
+                      if (duplicate) {
+                        return 'Student ID already exists';
+                      }
+
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: courseController,
+                    decoration: const InputDecoration(
+                      labelText: 'Course',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter course';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: hobbyController,
+                    decoration: const InputDecoration(
+                      labelText: 'Hobby',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(dialogContext, true);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      setState(() {
+        student['name'] = nameController.text.trim();
+        student['studentId'] = idController.text.trim();
+        student['course'] = courseController.text.trim();
+        student['hobby'] = hobbyController.text.trim();
+
+        sortStudents();
+      });
+      
+      await saveStudents();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student information updated!'),
+          ),
+        );
+      }
+    }
+
+    nameController.dispose();
+    courseController.dispose();
+    hobbyController.dispose();
+    idController.dispose();
+  }
+
+  Future<void> deleteStudent(
+    Map<String, dynamic> student,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Student'),
+          content: const Text(
+            'Are you sure you want to delete this student?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true && mounted) {
+      setState(() {
+        students.remove(student);
+      });
+
+      await saveStudents();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student deleted successfully!'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -117,10 +362,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/add-student');
-            },
-            icon: const Icon(Icons.person_add, color: Colors.white),
+            onPressed: openAddStudent,
+            icon: const Icon(
+              Icons.person_add,
+              color: Colors.white,
+            ),
           ),
         ],
       ),
@@ -152,21 +398,17 @@ class _StudentListScreenState extends State<StudentListScreen> {
                 ),
               )
             : students.isEmpty
-            ? const Center(
-                child: Text(
-                  'No students found.',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              )
-            : ListView(
-                children: [
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
+                ? const Center(
+                    child: Text(
+                      'No students found.',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
                     itemCount: students.length,
                     itemBuilder: (context, index) {
                       final student = students[index];
@@ -176,54 +418,79 @@ class _StudentListScreenState extends State<StudentListScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 20),
                             child: Image.asset(
-                              student['image'],
+                              student['image'] ??
+                                  'assets/Profile.jpg',
                               width: 350,
                               height: 200,
                               fit: BoxFit.cover,
+                              errorBuilder: (
+                                context,
+                                error,
+                                stackTrace,
+                              ) {
+                                return const Icon(
+                                  Icons.person,
+                                  size: 100,
+                                  color: Colors.white,
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(height: 15),
-
                           GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(
+                            onTap: () async {
+                              await Navigator.pushNamed(
                                 context,
                                 '/student-details',
                                 arguments: student,
                               );
+
+                              if (!mounted) return;
+
+                              await loadStudents();
+
+                              if (!mounted) return;
+
+                              setState(() {
+                                sortStudents();
+                              });
                             },
                             child: Card(
-                              color: const Color.fromARGB(53, 103, 102, 102),
+                              color: const Color.fromARGB(
+                                53,
+                                103,
+                                102,
+                                102,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(15),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          student['active']
+                                          student['active'] == true
                                               ? Icons.check_circle
                                               : Icons.cancel,
-                                          color: student['active']
+                                          color: student['active'] == true
                                               ? Colors.green
                                               : Colors.red,
                                           size: 20,
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          student['active']
+                                          student['active'] == true
                                               ? 'ACTIVE'
                                               : 'INACTIVE',
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
-                                            color: student['active']
+                                            color: student['active'] == true
                                                 ? Colors.green
                                                 : Colors.red,
                                           ),
@@ -231,30 +498,29 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-
-                                    if (!student['active'])
-                                      Row(
+                                    if (student['active'] != true)
+                                      const Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.warning,
                                             color: Colors.red,
                                             size: 20,
                                           ),
-                                          const SizedBox(width: 6),
-                                          const Text(
-                                            'INACTIVE - Please check status',
-                                            style: TextStyle(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.bold,
+                                          SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              'INACTIVE - Please check status',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
-
                                     const SizedBox(height: 8),
-
                                     Text(
                                       student['name'] ?? 'Unknown',
                                       style: const TextStyle(
@@ -275,19 +541,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 15),
-
                                     Text(
-                                      student['course'],
+                                      student['course'] ?? '',
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        color: Color.fromARGB(
-                                          255,
-                                          249,
-                                          249,
-                                          250,
-                                        ),
+                                        color: Colors.white,
                                         shadows: [
                                           Shadow(
                                             blurRadius: 6,
@@ -297,20 +556,13 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 15),
-
                                     Text(
                                       'Age: ${student['age']}',
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontStyle: FontStyle.italic,
-                                        color: Color.fromARGB(
-                                          255,
-                                          249,
-                                          249,
-                                          250,
-                                        ),
+                                        color: Colors.white,
                                         shadows: [
                                           Shadow(
                                             blurRadius: 6,
@@ -320,19 +572,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 15),
-
                                     Text(
-                                      student['hobby'],
+                                      student['hobby'] ?? '',
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        color: Color.fromARGB(
-                                          255,
-                                          249,
-                                          249,
-                                          250,
-                                        ),
+                                        color: Colors.white,
                                         shadows: [
                                           Shadow(
                                             blurRadius: 6,
@@ -342,19 +587,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 15),
-
                                     Text(
                                       'Student ID: ${student['studentId']}',
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        color: Color.fromARGB(
-                                          255,
-                                          249,
-                                          249,
-                                          250,
-                                        ),
+                                        color: Colors.white,
                                         shadows: [
                                           Shadow(
                                             blurRadius: 6,
@@ -364,19 +602,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 10),
-
                                     Text(
                                       'Email: ${student['email']}',
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        color: Color.fromARGB(
-                                          255,
-                                          249,
-                                          249,
-                                          250,
-                                        ),
+                                        color: Colors.white,
                                         shadows: [
                                           Shadow(
                                             blurRadius: 6,
@@ -386,19 +617,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 10),
-
                                     Text(
                                       'Favorite Subject: ${student['favoriteSubject']}',
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        color: Color.fromARGB(
-                                          255,
-                                          249,
-                                          249,
-                                          250,
-                                        ),
+                                        color: Colors.white,
                                         shadows: [
                                           Shadow(
                                             blurRadius: 6,
@@ -408,41 +632,14 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                         ],
                                       ),
                                     ),
-
                                     const SizedBox(height: 15),
-
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        // EDIT REMAINS A MODAL
                                         IconButton(
                                           onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return AlertDialog(
-                                                  title: const Text(
-                                                    'Edit Student',
-                                                  ),
-                                                  content: Text(
-                                                    'Edit screen for '
-                                                    '${student['name']} '
-                                                    'coming soon!',
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: const Text(
-                                                        'Close',
-                                                      ),
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
+                                            editStudent(student);
                                           },
                                           icon: const Icon(
                                             Icons.edit,
@@ -450,12 +647,9 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                             size: 40,
                                           ),
                                         ),
-
                                         IconButton(
                                           onPressed: () {
-                                            setState(() {
-                                              students.remove(student);
-                                            });
+                                            deleteStudent(student);
                                           },
                                           icon: const Icon(
                                             Icons.delete,
@@ -475,16 +669,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 20),
                         ],
                       );
                     },
                   ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
       ),
     );
   }
